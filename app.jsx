@@ -84,6 +84,25 @@ function RamenCard({ ramen, spoonsCount, onSpoon, onEdit, onDelete, isOwner }) {
           },
           this
         ),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            onClick: () => window.websim.postComment({
+              content: `\u{1F4B0} Tip to feature this ramen: ${ramen.name}`,
+              credits: 100
+            }),
+            className: "bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-3 py-1 rounded-full text-sm transition-colors",
+            children: "\u{1F4B0} Tip to Feature"
+          },
+          void 0,
+          false,
+          {
+            fileName: "<stdin>",
+            lineNumber: 46,
+            columnNumber: 21
+          },
+          this
+        ),
         isOwner && /* @__PURE__ */ jsxDEV(Fragment, { children: [
           /* @__PURE__ */ jsxDEV(
             "button",
@@ -96,7 +115,7 @@ function RamenCard({ ramen, spoonsCount, onSpoon, onEdit, onDelete, isOwner }) {
             false,
             {
               fileName: "<stdin>",
-              lineNumber: 48,
+              lineNumber: 58,
               columnNumber: 29
             },
             this
@@ -112,14 +131,14 @@ function RamenCard({ ramen, spoonsCount, onSpoon, onEdit, onDelete, isOwner }) {
             false,
             {
               fileName: "<stdin>",
-              lineNumber: 54,
+              lineNumber: 64,
               columnNumber: 29
             },
             this
           )
         ] }, void 0, true, {
           fileName: "<stdin>",
-          lineNumber: 47,
+          lineNumber: 57,
           columnNumber: 25
         }, this)
       ] }, void 0, true, {
@@ -145,7 +164,25 @@ function Leaderboard() {
   const [editingRamen, setEditingRamen] = useState(null);
   useEffect(() => {
     window.websim.getCurrentUser().then(setCurrentUser);
-  }, []);
+    window.websim.addEventListener("comment:created", async (event) => {
+      const comment = event.comment;
+      if (comment.card_data?.type === "tip_comment" && comment.content) {
+        const match = comment.raw_content?.match(/💰 Tip to feature this ramen: (.*?)(?:$|\n)/);
+        if (match) {
+          const ramenName = match[1];
+          const ramen = ramenList?.find((r) => r.name === ramenName);
+          if (ramen) {
+            await room.collection("ramen").upsert({
+              id: ramen.id,
+              featured: true,
+              featured_reason: "tip",
+              featured_amount: comment.card_data.credits_spent
+            });
+          }
+        }
+      }
+    });
+  }, [ramenList]);
   const getSpoonCount = (ramenId) => {
     return spoons?.filter((s) => s.ramen_id === ramenId).length || 0;
   };
@@ -212,64 +249,44 @@ function Leaderboard() {
   }
   if (loading) return /* @__PURE__ */ jsxDEV("div", { className: "text-center py-10", children: "Loading ramen..." }, void 0, false, {
     fileName: "<stdin>",
-    lineNumber: 161,
+    lineNumber: 192,
     columnNumber: 25
   }, this);
   return /* @__PURE__ */ jsxDEV("div", { className: "container mx-auto px-4 py-8", children: [
     /* @__PURE__ */ jsxDEV("div", { className: "text-center mb-8", children: [
       /* @__PURE__ */ jsxDEV("h1", { className: "text-5xl font-bold text-orange-400 mb-4", children: "\u{1F35C} Infinite Ramen AI" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 166,
+        lineNumber: 197,
         columnNumber: 17
       }, this),
       /* @__PURE__ */ jsxDEV("p", { className: "text-gray-300 mb-6", children: "Generate, share, and compete with AI-created ramen masterpieces!" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 167,
+        lineNumber: 198,
         columnNumber: 17
       }, this),
-      /* @__PURE__ */ jsxDEV("div", { className: "flex justify-center space-x-4 mb-8", children: [
-        /* @__PURE__ */ jsxDEV(
-          "button",
-          {
-            onClick: createRamen,
-            className: "bg-orange-500 hover:bg-orange-600 px-6 py-3 rounded-lg font-bold transition-colors",
-            children: "Generate New Ramen"
-          },
-          void 0,
-          false,
-          {
-            fileName: "<stdin>",
-            lineNumber: 170,
-            columnNumber: 21
-          },
-          this
-        ),
-        /* @__PURE__ */ jsxDEV(
-          "button",
-          {
-            onClick: () => window.websim.postComment({
-              content: "Tip to feature your favorite ramen creations!"
-            }),
-            className: "bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-6 py-3 rounded-lg font-bold transition-colors",
-            children: "\u{1F4B0} Tip to Feature"
-          },
-          void 0,
-          false,
-          {
-            fileName: "<stdin>",
-            lineNumber: 177,
-            columnNumber: 21
-          },
-          this
-        )
-      ] }, void 0, true, {
+      /* @__PURE__ */ jsxDEV("div", { className: "flex justify-center space-x-4 mb-8", children: /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          onClick: createRamen,
+          className: "bg-orange-500 hover:bg-orange-600 px-6 py-3 rounded-lg font-bold transition-colors",
+          children: "Generate New Ramen"
+        },
+        void 0,
+        false,
+        {
+          fileName: "<stdin>",
+          lineNumber: 201,
+          columnNumber: 21
+        },
+        this
+      ) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 169,
+        lineNumber: 200,
         columnNumber: 17
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 165,
+      lineNumber: 196,
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6", children: sortedRamen?.map((ramen) => /* @__PURE__ */ jsxDEV(
@@ -286,35 +303,35 @@ function Leaderboard() {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 190,
+        lineNumber: 212,
         columnNumber: 21
       },
       this
     )) }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 188,
+      lineNumber: 210,
       columnNumber: 13
     }, this),
     ramenList?.length === 0 && /* @__PURE__ */ jsxDEV("div", { className: "text-center py-20", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "text-6xl mb-4", children: "\u{1F35C}" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 204,
+        lineNumber: 226,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV("p", { className: "text-gray-400", children: "No ramen creations yet. Be the first!" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 205,
+        lineNumber: 227,
         columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 203,
+      lineNumber: 225,
       columnNumber: 17
     }, this),
     editingRamen && /* @__PURE__ */ jsxDEV("div", { className: "fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50", children: /* @__PURE__ */ jsxDEV("div", { className: "bg-gray-800 p-6 rounded-lg w-full max-w-md", children: [
       /* @__PURE__ */ jsxDEV("h2", { className: "text-2xl font-bold text-orange-400 mb-4", children: "Edit Ramen" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 212,
+        lineNumber: 234,
         columnNumber: 25
       }, this),
       /* @__PURE__ */ jsxDEV("form", { onSubmit: (e) => {
@@ -329,7 +346,7 @@ function Leaderboard() {
         /* @__PURE__ */ jsxDEV("div", { className: "mb-4", children: [
           /* @__PURE__ */ jsxDEV("label", { className: "block text-sm font-medium mb-2", children: "Name" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 223,
+            lineNumber: 245,
             columnNumber: 33
           }, this),
           /* @__PURE__ */ jsxDEV(
@@ -345,20 +362,20 @@ function Leaderboard() {
             false,
             {
               fileName: "<stdin>",
-              lineNumber: 224,
+              lineNumber: 246,
               columnNumber: 33
             },
             this
           )
         ] }, void 0, true, {
           fileName: "<stdin>",
-          lineNumber: 222,
+          lineNumber: 244,
           columnNumber: 29
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "mb-4", children: [
           /* @__PURE__ */ jsxDEV("label", { className: "block text-sm font-medium mb-2", children: "Description" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 233,
+            lineNumber: 255,
             columnNumber: 33
           }, this),
           /* @__PURE__ */ jsxDEV(
@@ -374,20 +391,20 @@ function Leaderboard() {
             false,
             {
               fileName: "<stdin>",
-              lineNumber: 234,
+              lineNumber: 256,
               columnNumber: 33
             },
             this
           )
         ] }, void 0, true, {
           fileName: "<stdin>",
-          lineNumber: 232,
+          lineNumber: 254,
           columnNumber: 29
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "mb-4", children: [
           /* @__PURE__ */ jsxDEV("label", { className: "block text-sm font-medium mb-2", children: "Ingredients (comma separated)" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 243,
+            lineNumber: 265,
             columnNumber: 33
           }, this),
           /* @__PURE__ */ jsxDEV(
@@ -402,14 +419,14 @@ function Leaderboard() {
             false,
             {
               fileName: "<stdin>",
-              lineNumber: 244,
+              lineNumber: 266,
               columnNumber: 33
             },
             this
           )
         ] }, void 0, true, {
           fileName: "<stdin>",
-          lineNumber: 242,
+          lineNumber: 264,
           columnNumber: 29
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "flex space-x-4", children: [
@@ -424,7 +441,7 @@ function Leaderboard() {
             false,
             {
               fileName: "<stdin>",
-              lineNumber: 252,
+              lineNumber: 274,
               columnNumber: 33
             },
             this
@@ -441,39 +458,39 @@ function Leaderboard() {
             false,
             {
               fileName: "<stdin>",
-              lineNumber: 258,
+              lineNumber: 280,
               columnNumber: 33
             },
             this
           )
         ] }, void 0, true, {
           fileName: "<stdin>",
-          lineNumber: 251,
+          lineNumber: 273,
           columnNumber: 29
         }, this)
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 213,
+        lineNumber: 235,
         columnNumber: 25
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 211,
+      lineNumber: 233,
       columnNumber: 21
     }, this) }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 210,
+      lineNumber: 232,
       columnNumber: 17
     }, this)
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 164,
+    lineNumber: 195,
     columnNumber: 9
   }, this);
 }
 const root = createRoot(document.getElementById("root"));
 root.render(/* @__PURE__ */ jsxDEV(Leaderboard, {}, void 0, false, {
   fileName: "<stdin>",
-  lineNumber: 275,
+  lineNumber: 297,
   columnNumber: 13
 }));
