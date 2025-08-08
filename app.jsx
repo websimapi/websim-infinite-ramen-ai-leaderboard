@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { WebsimSocket, useQuery } from "@websim/use-query";
 const room = new WebsimSocket();
-function RamenCard({ ramen, spoonsCount }) {
+function RamenCard({ ramen, spoonsCount, onSpoon }) {
   const isFeatured = ramen.featured;
   const featuredByTip = ramen.featured_reason === "tip";
   return /* @__PURE__ */ jsxDEV("div", { className: `relative bg-gray-800 rounded-lg p-4 transform transition-all duration-300 hover:scale-105 ${isFeatured ? "featured-glow" : ""}`, children: [
@@ -54,7 +54,7 @@ function RamenCard({ ramen, spoonsCount }) {
       /* @__PURE__ */ jsxDEV(
         "button",
         {
-          onClick: () => handleSpoon(ramen.id),
+          onClick: () => onSpoon(ramen.id),
           className: "bg-pink-500 hover:bg-pink-600 px-3 py-1 rounded-full text-sm transition-colors",
           children: "Add Spoon"
         },
@@ -95,7 +95,7 @@ function Leaderboard() {
     if (!a.featured && b.featured) return 1;
     return bSpoons - aSpoons;
   });
-  async function handleSpoon2(ramenId) {
+  async function handleSpoon(ramenId) {
     if (!currentUser) return;
     const spoonId = `${currentUser.id}-${ramenId}`;
     await room.collection("spoons").upsert({
@@ -197,7 +197,8 @@ function Leaderboard() {
       RamenCard,
       {
         ramen,
-        spoonsCount: getSpoonCount(ramen.id)
+        spoonsCount: getSpoonCount(ramen.id),
+        onSpoon: handleSpoon
       },
       ramen.id,
       false,
@@ -215,17 +216,17 @@ function Leaderboard() {
     ramenList?.length === 0 && /* @__PURE__ */ jsxDEV("div", { className: "text-center py-20", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "text-6xl mb-4", children: "\u{1F35C}" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 151,
+        lineNumber: 152,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV("p", { className: "text-gray-400", children: "No ramen creations yet. Be the first!" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 152,
+        lineNumber: 153,
         columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 150,
+      lineNumber: 151,
       columnNumber: 17
     }, this)
   ] }, void 0, true, {
@@ -237,6 +238,6 @@ function Leaderboard() {
 const root = createRoot(document.getElementById("root"));
 root.render(/* @__PURE__ */ jsxDEV(Leaderboard, {}, void 0, false, {
   fileName: "<stdin>",
-  lineNumber: 160,
+  lineNumber: 161,
   columnNumber: 13
 }));
