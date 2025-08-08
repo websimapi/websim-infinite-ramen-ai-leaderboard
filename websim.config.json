@@ -1,0 +1,51 @@
+{
+  "database": {
+    "schema": {
+      "ramen": {
+        "id": {
+          "type": "uuid",
+          "description": "Unique identifier for the ramen creation"
+        },
+        "name": {
+          "type": "text",
+          "description": "Name of the ramen creation"
+        },
+        "description": {
+          "type": "text",
+          "description": "Description of the ramen creation"
+        },
+        "image_url": {
+          "type": "text",
+          "description": "URL of the generated ramen image"
+        },
+        "ingredients": {
+          "type": "jsonb",
+          "description": "JSON array of ingredients"
+        },
+        "featured": {
+          "type": "boolean",
+          "description": "Whether this ramen is featured"
+        },
+        "featured_reason": {
+          "type": "text",
+          "description": "Reason for featuring (tip or spoons)"
+        },
+        "featured_amount": {
+          "type": "numeric",
+          "description": "Amount tipped for featuring"
+        }
+      },
+      "spoons": {
+        "id": {
+          "type": "text",
+          "description": "user_id + ramen_id for uniqueness"
+        },
+        "ramen_id": {
+          "type": "uuid",
+          "description": "ID of the ramen being liked"
+        }
+      }
+    }
+  }
+}
+
