@@ -1,9 +1,9 @@
-import { jsxDEV } from "react/jsx-dev-runtime";
+import { Fragment, jsxDEV } from "react/jsx-dev-runtime";
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { WebsimSocket, useQuery } from "@websim/use-query";
 const room = new WebsimSocket();
-function RamenCard({ ramen, spoonsCount, onSpoon }) {
+function RamenCard({ ramen, spoonsCount, onSpoon, onEdit, onDelete, isOwner }) {
   const isFeatured = ramen.featured;
   const featuredByTip = ramen.featured_reason === "tip";
   return /* @__PURE__ */ jsxDEV("div", { className: `relative bg-gray-800 rounded-lg p-4 transform transition-all duration-300 hover:scale-105 ${isFeatured ? "featured-glow" : ""}`, children: [
@@ -38,38 +38,98 @@ function RamenCard({ ramen, spoonsCount, onSpoon }) {
       lineNumber: 26,
       columnNumber: 13
     }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "mb-3", children: [
+      /* @__PURE__ */ jsxDEV("p", { className: "text-xs text-gray-400", children: "Ingredients:" }, void 0, false, {
+        fileName: "<stdin>",
+        lineNumber: 29,
+        columnNumber: 17
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { className: "text-xs text-gray-300", children: ramen.ingredients?.join(", ") || "Not specified" }, void 0, false, {
+        fileName: "<stdin>",
+        lineNumber: 30,
+        columnNumber: 17
+      }, this)
+    ] }, void 0, true, {
+      fileName: "<stdin>",
+      lineNumber: 28,
+      columnNumber: 13
+    }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "flex justify-between items-center", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "flex items-center space-x-2", children: /* @__PURE__ */ jsxDEV("span", { className: "text-pink-400", children: [
         "\u{1F944} ",
         spoonsCount
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 30,
+        lineNumber: 35,
         columnNumber: 21
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 29,
+        lineNumber: 34,
         columnNumber: 17
       }, this),
-      /* @__PURE__ */ jsxDEV(
-        "button",
-        {
-          onClick: () => onSpoon(ramen.id),
-          className: "bg-pink-500 hover:bg-pink-600 px-3 py-1 rounded-full text-sm transition-colors",
-          children: "Add Spoon"
-        },
-        void 0,
-        false,
-        {
+      /* @__PURE__ */ jsxDEV("div", { className: "flex space-x-2", children: [
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            onClick: () => onSpoon(ramen.id),
+            className: "bg-pink-500 hover:bg-pink-600 px-3 py-1 rounded-full text-sm transition-colors",
+            children: "Add Spoon"
+          },
+          void 0,
+          false,
+          {
+            fileName: "<stdin>",
+            lineNumber: 39,
+            columnNumber: 21
+          },
+          this
+        ),
+        isOwner && /* @__PURE__ */ jsxDEV(Fragment, { children: [
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              onClick: () => onEdit(ramen),
+              className: "bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded-full text-sm transition-colors",
+              children: "Edit"
+            },
+            void 0,
+            false,
+            {
+              fileName: "<stdin>",
+              lineNumber: 48,
+              columnNumber: 29
+            },
+            this
+          ),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              onClick: () => onDelete(ramen.id),
+              className: "bg-red-500 hover:bg-red-600 px-3 py-1 rounded-full text-sm transition-colors",
+              children: "Delete"
+            },
+            void 0,
+            false,
+            {
+              fileName: "<stdin>",
+              lineNumber: 54,
+              columnNumber: 29
+            },
+            this
+          )
+        ] }, void 0, true, {
           fileName: "<stdin>",
-          lineNumber: 33,
-          columnNumber: 17
-        },
-        this
-      )
+          lineNumber: 47,
+          columnNumber: 25
+        }, this)
+      ] }, void 0, true, {
+        fileName: "<stdin>",
+        lineNumber: 38,
+        columnNumber: 17
+      }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 28,
+      lineNumber: 33,
       columnNumber: 13
     }, this)
   ] }, void 0, true, {
@@ -82,6 +142,7 @@ function Leaderboard() {
   const { data: ramenList, loading } = useQuery(room.collection("ramen"));
   const { data: spoons } = useQuery(room.collection("spoons"));
   const [currentUser, setCurrentUser] = useState(null);
+  const [editingRamen, setEditingRamen] = useState(null);
   useEffect(() => {
     window.websim.getCurrentUser().then(setCurrentUser);
   }, []);
@@ -111,6 +172,24 @@ function Leaderboard() {
       });
     }
   }
+  async function handleDelete(ramenId) {
+    if (!confirm("Are you sure you want to delete this ramen creation?")) return;
+    await room.collection("ramen").delete(ramenId);
+    const ramenSpoons = spoons?.filter((s) => s.ramen_id === ramenId) || [];
+    await Promise.all(
+      ramenSpoons.map((spoon) => room.collection("spoons").delete(spoon.id))
+    );
+  }
+  async function handleEdit(ramen) {
+    setEditingRamen(ramen);
+  }
+  async function handleUpdateRamen(updatedData) {
+    await room.collection("ramen").upsert({
+      id: editingRamen.id,
+      ...updatedData
+    });
+    setEditingRamen(null);
+  }
   async function createRamen() {
     const name = prompt("Name your ramen creation:");
     const description = prompt("Describe your ramen:");
@@ -133,19 +212,19 @@ function Leaderboard() {
   }
   if (loading) return /* @__PURE__ */ jsxDEV("div", { className: "text-center py-10", children: "Loading ramen..." }, void 0, false, {
     fileName: "<stdin>",
-    lineNumber: 112,
+    lineNumber: 161,
     columnNumber: 25
   }, this);
   return /* @__PURE__ */ jsxDEV("div", { className: "container mx-auto px-4 py-8", children: [
     /* @__PURE__ */ jsxDEV("div", { className: "text-center mb-8", children: [
       /* @__PURE__ */ jsxDEV("h1", { className: "text-5xl font-bold text-orange-400 mb-4", children: "\u{1F35C} Infinite Ramen AI" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 117,
+        lineNumber: 166,
         columnNumber: 17
       }, this),
       /* @__PURE__ */ jsxDEV("p", { className: "text-gray-300 mb-6", children: "Generate, share, and compete with AI-created ramen masterpieces!" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 118,
+        lineNumber: 167,
         columnNumber: 17
       }, this),
       /* @__PURE__ */ jsxDEV("div", { className: "flex justify-center space-x-4 mb-8", children: [
@@ -160,7 +239,7 @@ function Leaderboard() {
           false,
           {
             fileName: "<stdin>",
-            lineNumber: 121,
+            lineNumber: 170,
             columnNumber: 21
           },
           this
@@ -169,28 +248,28 @@ function Leaderboard() {
           "button",
           {
             onClick: () => window.websim.postComment({
-              content: "Tip $10 to feature your favorite ramen creation!"
+              content: "Tip to feature your favorite ramen creations!"
             }),
             className: "bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-6 py-3 rounded-lg font-bold transition-colors",
-            children: "\u{1F4B0} Tip $10 to Feature"
+            children: "\u{1F4B0} Tip to Feature"
           },
           void 0,
           false,
           {
             fileName: "<stdin>",
-            lineNumber: 128,
+            lineNumber: 177,
             columnNumber: 21
           },
           this
         )
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 120,
+        lineNumber: 169,
         columnNumber: 17
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 116,
+      lineNumber: 165,
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6", children: sortedRamen?.map((ramen) => /* @__PURE__ */ jsxDEV(
@@ -198,46 +277,203 @@ function Leaderboard() {
       {
         ramen,
         spoonsCount: getSpoonCount(ramen.id),
-        onSpoon: handleSpoon
+        onSpoon: handleSpoon,
+        onEdit: handleEdit,
+        onDelete: handleDelete,
+        isOwner: currentUser && ramen.username === currentUser.username
       },
       ramen.id,
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 141,
+        lineNumber: 190,
         columnNumber: 21
       },
       this
     )) }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 139,
+      lineNumber: 188,
       columnNumber: 13
     }, this),
     ramenList?.length === 0 && /* @__PURE__ */ jsxDEV("div", { className: "text-center py-20", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "text-6xl mb-4", children: "\u{1F35C}" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 152,
+        lineNumber: 204,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV("p", { className: "text-gray-400", children: "No ramen creations yet. Be the first!" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 153,
+        lineNumber: 205,
         columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 151,
+      lineNumber: 203,
+      columnNumber: 17
+    }, this),
+    editingRamen && /* @__PURE__ */ jsxDEV("div", { className: "fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50", children: /* @__PURE__ */ jsxDEV("div", { className: "bg-gray-800 p-6 rounded-lg w-full max-w-md", children: [
+      /* @__PURE__ */ jsxDEV("h2", { className: "text-2xl font-bold text-orange-400 mb-4", children: "Edit Ramen" }, void 0, false, {
+        fileName: "<stdin>",
+        lineNumber: 212,
+        columnNumber: 25
+      }, this),
+      /* @__PURE__ */ jsxDEV("form", { onSubmit: (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        handleUpdateRamen({
+          name: formData.get("name"),
+          description: formData.get("description"),
+          ingredients: formData.get("ingredients").split(",").map((i) => i.trim())
+        });
+      }, children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "mb-4", children: [
+          /* @__PURE__ */ jsxDEV("label", { className: "block text-sm font-medium mb-2", children: "Name" }, void 0, false, {
+            fileName: "<stdin>",
+            lineNumber: 223,
+            columnNumber: 33
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            "input",
+            {
+              name: "name",
+              type: "text",
+              defaultValue: editingRamen.name,
+              className: "w-full px-3 py-2 bg-gray-700 rounded-md",
+              required: true
+            },
+            void 0,
+            false,
+            {
+              fileName: "<stdin>",
+              lineNumber: 224,
+              columnNumber: 33
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "<stdin>",
+          lineNumber: 222,
+          columnNumber: 29
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "mb-4", children: [
+          /* @__PURE__ */ jsxDEV("label", { className: "block text-sm font-medium mb-2", children: "Description" }, void 0, false, {
+            fileName: "<stdin>",
+            lineNumber: 233,
+            columnNumber: 33
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            "textarea",
+            {
+              name: "description",
+              defaultValue: editingRamen.description,
+              className: "w-full px-3 py-2 bg-gray-700 rounded-md",
+              rows: "3",
+              required: true
+            },
+            void 0,
+            false,
+            {
+              fileName: "<stdin>",
+              lineNumber: 234,
+              columnNumber: 33
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "<stdin>",
+          lineNumber: 232,
+          columnNumber: 29
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "mb-4", children: [
+          /* @__PURE__ */ jsxDEV("label", { className: "block text-sm font-medium mb-2", children: "Ingredients (comma separated)" }, void 0, false, {
+            fileName: "<stdin>",
+            lineNumber: 243,
+            columnNumber: 33
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            "input",
+            {
+              name: "ingredients",
+              type: "text",
+              defaultValue: editingRamen.ingredients?.join(", "),
+              className: "w-full px-3 py-2 bg-gray-700 rounded-md"
+            },
+            void 0,
+            false,
+            {
+              fileName: "<stdin>",
+              lineNumber: 244,
+              columnNumber: 33
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "<stdin>",
+          lineNumber: 242,
+          columnNumber: 29
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "flex space-x-4", children: [
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "submit",
+              className: "bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-md",
+              children: "Save Changes"
+            },
+            void 0,
+            false,
+            {
+              fileName: "<stdin>",
+              lineNumber: 252,
+              columnNumber: 33
+            },
+            this
+          ),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              onClick: () => setEditingRamen(null),
+              className: "bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-md",
+              children: "Cancel"
+            },
+            void 0,
+            false,
+            {
+              fileName: "<stdin>",
+              lineNumber: 258,
+              columnNumber: 33
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "<stdin>",
+          lineNumber: 251,
+          columnNumber: 29
+        }, this)
+      ] }, void 0, true, {
+        fileName: "<stdin>",
+        lineNumber: 213,
+        columnNumber: 25
+      }, this)
+    ] }, void 0, true, {
+      fileName: "<stdin>",
+      lineNumber: 211,
+      columnNumber: 21
+    }, this) }, void 0, false, {
+      fileName: "<stdin>",
+      lineNumber: 210,
       columnNumber: 17
     }, this)
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 115,
+    lineNumber: 164,
     columnNumber: 9
   }, this);
 }
 const root = createRoot(document.getElementById("root"));
 root.render(/* @__PURE__ */ jsxDEV(Leaderboard, {}, void 0, false, {
   fileName: "<stdin>",
-  lineNumber: 161,
+  lineNumber: 275,
   columnNumber: 13
 }));
