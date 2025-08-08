@@ -169,10 +169,10 @@ function Leaderboard() {
           "button",
           {
             onClick: () => window.websim.postComment({
-              content: "Tip to feature your favorite ramen creations!"
+              content: "Tip $10 to feature your favorite ramen creation!"
             }),
             className: "bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-6 py-3 rounded-lg font-bold transition-colors",
-            children: "\u{1F4B0} Tip to Feature"
+            children: "\u{1F4B0} Tip $10 to Feature"
           },
           void 0,
           false,
